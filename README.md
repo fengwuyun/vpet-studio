@@ -1,8 +1,10 @@
 # 🐾 VPet Studio · 桌宠模组可视化工坊
 
-[![Release](https://img.shields.io/badge/release-v1.0.0-ff6fa5?style=flat-square)](https://github.com/fengwuyun/vpet-studio/releases) [![License](https://img.shields.io/badge/license-MIT-a78bfa?style=flat-square)](LICENSE) [![Platform](https://img.shields.io/badge/platform-Windows%20x64-34d3a6?style=flat-square)](https://github.com/fengwuyun/vpet-studio/releases)
+[![Release](https://img.shields.io/badge/release-v1.1.0-ff6fa5?style=flat-square)](https://github.com/fengwuyun/vpet-studio/releases) [![License](https://img.shields.io/badge/license-MIT-a78bfa?style=flat-square)](LICENSE) [![Platform](https://img.shields.io/badge/platform-Windows%20x64-34d3a6?style=flat-square)](https://github.com/fengwuyun/vpet-studio/releases)
 
-**下载桌面版**：[Releases](https://github.com/fengwuyun/vpet-studio/releases) 提供 `VPet-Studio-Setup-1.0.0.exe`（安装版）与 `VPet-Studio-Portable-1.0.0.exe`（免安装便携版）。
+**下载桌面版**：[Releases](https://github.com/fengwuyun/vpet-studio/releases) 提供 `VPet-Studio-Setup-1.1.0.exe`（安装版）与 `VPet-Studio-Portable-1.1.0.exe`（免安装便携版）。
+
+**🎨 外观主题**：内置 5 套配色 —— 樱花粉（默认）/ 海空蓝 / 薄荷绿 / 暖阳黄 / 暗夜（深色护眼），在顶栏「🎨 外观」或首页按钮中一键切换，自动记住偏好。
 
 基于 [VPet 虚拟桌宠模拟器](https://github.com/LorisYounger/VPet) 的模组格式（与官方 VPet.ModMaker 输出结构 100% 对齐），采用明亮萌系 UI 的**桌面端可视化配置软件**：不用手写任何 `.lps` 配置文件，即可完成宠物资料、动作动画、食物物品、对话文本的全套配置，并通过「素材生成流水线」把图片素材变成游戏里能跑的桌宠。
 

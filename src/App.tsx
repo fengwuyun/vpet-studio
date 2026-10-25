@@ -10,6 +10,7 @@ import TextView from './views/TextView';
 import AiCenterView from './views/AiCenterView';
 import ExportView from './views/ExportView';
 import { backend } from './lib/backend';
+import { THEMES, currentTheme, applyTheme } from './lib/theme';
 import { Modal, Field } from './components/ui';
 
 const NAV = [
@@ -101,17 +102,48 @@ function PetSwitcher() {
   );
 }
 
+/** 外观主题切换弹窗 */
+function ThemePickerModal({ onClose }: { onClose: () => void }) {
+  const [cur, setCur] = useState(currentTheme());
+  return (
+    <Modal title="🎨 外观主题" onClose={onClose}
+      footer={<button className="btn" onClick={onClose}>完成</button>}>
+      <div className="card-desc" style={{ marginBottom: 14 }}>
+        选择喜欢的配色, 全局立即生效并自动记住(重启后保持)。「暗夜」为深色护眼主题, 其余为明亮主题。
+      </div>
+      <div className="theme-grid">
+        {THEMES.map((t) => (
+          <div key={t.id} className={`theme-card ${cur === t.id ? 'active' : ''}`}
+            onClick={() => { applyTheme(t.id); setCur(t.id); }}>
+            <div className="swatch">{t.dots.map((c, i) => <i key={i} style={{ background: c }} />)}</div>
+            <div className="nm">{t.name}</div>
+            <div className="ds">{t.desc}</div>
+            {cur === t.id && <div className="on-mark">✓ 当前使用</div>}
+          </div>
+        ))}
+      </div>
+    </Modal>
+  );
+}
+
 function Shell() {
   const s = useStore();
   const p = s.project;
   const [browserMode, setBrowserMode] = useState(false);
   const [aiCount, setAiCount] = useState(0);
+  const [themeOpen, setThemeOpen] = useState(false);
 
   useEffect(() => { setBrowserMode(!backend.isDesktop); }, []);
   useEffect(() => { document.title = p ? `${p.meta.name} · VPet Studio` : 'VPet Studio · 桌宠模组工坊'; }, [p]);
   useEffect(() => {
     backend.getAiConfig().then((c) => setAiCount(c.providers.length)).catch(() => {});
   }, [s.view === 'ai']);
+
+  useEffect(() => {
+    const open = () => setThemeOpen(true);
+    window.addEventListener('open-theme-picker', open);
+    return () => window.removeEventListener('open-theme-picker', open);
+  }, []);
 
   return (
     <div className="app">
@@ -172,6 +204,7 @@ function Shell() {
               </div>
               <div className="topbar-actions">
                 {browserMode && <span className="tag amber">浏览器演示模式</span>}
+                <button className="btn sm" onClick={() => setThemeOpen(true)} title="切换外观主题">🎨 外观</button>
                 <button className="btn sm" onClick={() => s.setView('ai')}>
                   <span className={`ai-dot ${aiCount ? 'on' : ''}`} />
                   ✨ AI {aiCount ? `已配置 ${aiCount} 家` : '未配置, 点此设置'}
@@ -205,6 +238,8 @@ function Shell() {
           <div key={t.id} className={`toast ${t.kind}`}>{t.kind === 'ok' ? '✓ ' : '✕ '}{t.msg}</div>
         ))}
       </div>
+
+      {themeOpen && <ThemePickerModal onClose={() => setThemeOpen(false)} />}
     </div>
   );
 }

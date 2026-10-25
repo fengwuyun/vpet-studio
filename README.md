@@ -2,7 +2,9 @@
 
 [![Release](https://img.shields.io/badge/release-v1.1.0-ff6fa5?style=flat-square)](https://github.com/fengwuyun/vpet-studio/releases) [![License](https://img.shields.io/badge/license-MIT-a78bfa?style=flat-square)](LICENSE) [![Platform](https://img.shields.io/badge/platform-Windows%20x64-34d3a6?style=flat-square)](https://github.com/fengwuyun/vpet-studio/releases)
 
-**下载桌面版**：[Releases](https://github.com/fengwuyun/vpet-studio/releases) 提供 `VPet-Studio-Setup-1.1.0.exe`（安装版）与 `VPet-Studio-Portable-1.1.0.exe`（免安装便携版）。
+**下载桌面版**：[Releases](https://github.com/fengwuyun/vpet-studio/releases) 提供 `VPet-Studio-Setup-x.x.x.exe`（安装版，推荐）与 `VPet-Studio-Portable-x.x.x.exe`（免安装便携版）。
+
+> ⚠️ **杀软误报说明**：应用未做代码签名，便携版（自解压单文件）可能被 Windows Defender 误报为病毒（开源免费软件的常见误报）。建议优先使用安装版；或在杀软「保护历史」中选择允许/添加信任目录。应用完全开源，可自行审查源码或本地构建（`npm install && npm run dist`）。
 
 **🎨 外观主题**：内置 5 套配色 —— 樱花粉（默认）/ 海空蓝 / 薄荷绿 / 暖阳黄 / 暗夜（深色护眼），在顶栏「🎨 外观」或首页按钮中一键切换，自动记住偏好。
 

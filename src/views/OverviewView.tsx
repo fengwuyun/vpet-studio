@@ -71,17 +71,17 @@ export default function OverviewView({ aiCount }: { aiCount: number }) {
         <div>
           {/* AI 快捷入口 */}
           <div className="card" style={{
-            background: aiCount ? 'linear-gradient(120deg,#fff2f8,#f3edff)' : 'linear-gradient(120deg,#fff8f2,#fff2f8)',
+            background: aiCount ? 'linear-gradient(120deg,var(--hover-soft),var(--tab-active-bg))' : 'linear-gradient(120deg,#fff8f2,#fff2f8)',
           }}>
-            <div className="card-title">✨ AI 管理与生成 {aiCount ? <span className="tag green">已配置 {aiCount} 家服务商</span> : <span className="tag amber">未配置</span>}</div>
+            <div className="card-title">✨ AI 生成 {aiCount ? <span className="tag green">已配置 {aiCount} 家服务商</span> : <span className="tag amber">未配置</span>}</div>
             <div className="card-desc">
               {aiCount
-                ? '可在 AI 中心生成桌宠形象/精灵图、撰写介绍与台词并一键回填; 也可管理服务商、模型与密钥'
-                : '配置一个 OpenAI 兼容服务(OpenAI / 智谱 / 中转站), 即可用 AI 生成素材图与文案 —— 点击右侧按钮开始'}
+                ? '在 AI 生成页用 9 个提示词模板生成桌宠素材、撰写介绍与台词并一键回填; 服务商管理在 设置 → AI 服务商'
+                : '先在 设置 → AI 服务商 配置一个 OpenAI 兼容服务, 即可用 AI 生成素材图与文案'}
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <button className="btn primary" onClick={() => s.setView('ai')}>{aiCount ? '🪄 去生成素材/文案' : '⚙️ 去配置 AI 服务商'}</button>
-              {aiCount > 0 && <button className="btn" onClick={() => s.setView('ai')}>管理服务商 / 日志</button>}
+              {aiCount > 0 && <button className="btn primary" onClick={() => s.setView('ai')}>🪄 去 AI 生成</button>}
+              <button className="btn" onClick={() => s.setView('settings')}>⚙️ {aiCount ? '管理服务商(设置)' : '去设置 → AI 服务商'}</button>
             </div>
           </div>
 

@@ -87,29 +87,30 @@ function Library({ onQuickSplit }: { onQuickSplit: (a: Asset) => void }) {
       </div>
 
       <div className="card">
-        <div className="row" style={{ marginBottom: 14 }}>
+        <div className="row" style={{ marginBottom: 14, paddingBottom: 0 }}>
           <input className="input" style={{ maxWidth: 240 }} placeholder="🔍 搜索素材名…" value={q} onChange={(e) => setQ(e.target.value)} />
           <div className="kind-chips">
             {([['all', '全部'], ['raw', '🖼 原始素材'], ['frame', '🎞 动画帧'], ['icon', '🏷 图标'], ['ai', '✨ AI 生成']] as const).map(([k, n]) => (
               <div key={k} className={`kind-chip ${kind === k ? 'on' : ''}`} onClick={() => setKind(k as any)}>{n}</div>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 8, marginLeft: 'auto', flexWrap: 'wrap' }}>
-            <button className="btn" disabled={sel.size !== 1} onClick={() => onQuickSplit(selAssets[0])}>✂️ 去切片</button>
-            <button className="btn" disabled={!sel.size} onClick={mirrorSelected}>🪞 镜像选中 ({sel.size})</button>
-            <button className="btn" disabled={!sel.size} onClick={() => setBindPick(true)}>🎬 绑定为动画帧</button>
-            <button className="btn" disabled={sel.size !== 1} onClick={() => {
-              const a = selAssets[0];
-              s.update((d) => { d.meta.iconAssetId = a.id; });
-              s.toast('已设为模组图标(建议正方形图)');
-            }}>🏷 设为模组图标</button>
-            <button className="btn" disabled={sel.size !== 1} onClick={() => setRenameFor(selAssets[0])}>✏️ 重命名</button>
-            <button className="btn danger" disabled={!sel.size} onClick={() => {
-              if (!confirm(`删除选中的 ${sel.size} 张素材? 已被动画引用的帧会失效!`)) return;
-              s.update((d) => { d.assets = d.assets.filter((a) => !sel.has(a.id)); });
-              setSel(new Set());
-            }}>删除</button>
-          </div>
+          {!!sel.size && <span className="tag pink" style={{ marginLeft: 'auto' }}>已选 {sel.size} 张</span>}
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14, justifyContent: 'flex-end' }}>
+          <button className="btn" disabled={sel.size !== 1} onClick={() => onQuickSplit(selAssets[0])}>✂️ 去切片</button>
+          <button className="btn" disabled={!sel.size} onClick={mirrorSelected}>🪞 镜像选中 ({sel.size})</button>
+          <button className="btn" disabled={!sel.size} onClick={() => setBindPick(true)}>🎬 绑定为动画帧</button>
+          <button className="btn" disabled={sel.size !== 1} onClick={() => {
+            const a = selAssets[0];
+            s.update((d) => { d.meta.iconAssetId = a.id; });
+            s.toast('已设为模组图标(建议正方形图)');
+          }}>🏷 设为模组图标</button>
+          <button className="btn" disabled={sel.size !== 1} onClick={() => setRenameFor(selAssets[0])}>✏️ 重命名</button>
+          <button className="btn danger" disabled={!sel.size} onClick={() => {
+            if (!confirm(`删除选中的 ${sel.size} 张素材? 已被动画引用的帧会失效!`)) return;
+            s.update((d) => { d.assets = d.assets.filter((a) => !sel.has(a.id)); });
+            setSel(new Set());
+          }}>删除</button>
         </div>
 
         {!assets.length ? <div className="empty"><div className="big">🗃</div>{p.assets.length ? '没有符合筛选条件的素材' : '素材库还是空的 —— 从上方上传第一张素材吧'}</div> : (

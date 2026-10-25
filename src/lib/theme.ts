@@ -17,6 +17,7 @@ export const THEMES: ThemeDef[] = [
 ];
 
 const KEY = 'vpet-theme';
+const PATTERN_KEY = 'vpet-pattern';
 
 export function currentTheme(): string {
   return localStorage.getItem(KEY) || 'sakura';
@@ -25,4 +26,14 @@ export function currentTheme(): string {
 export function applyTheme(id: string) {
   localStorage.setItem(KEY, id);
   document.documentElement.dataset.theme = id;
+}
+
+export function patternEnabled(): boolean {
+  return (localStorage.getItem(PATTERN_KEY) || 'on') === 'on';
+}
+
+export function applyPattern(on: boolean) {
+  localStorage.setItem(PATTERN_KEY, on ? 'on' : 'off');
+  if (on) delete document.documentElement.dataset.pattern;
+  else document.documentElement.dataset.pattern = 'off';
 }

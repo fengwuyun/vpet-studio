@@ -6,7 +6,7 @@ import type { StudioProject, Asset, PetConfig } from './types';
 import { migrateProject, newPet, newId } from './types';
 import { backend } from './backend';
 
-type Mode = 'home' | 'overview' | 'pet' | 'anime' | 'assets' | 'food' | 'text' | 'ai' | 'export';
+type Mode = 'home' | 'overview' | 'pet' | 'anime' | 'assets' | 'food' | 'text' | 'ai' | 'export' | 'settings';
 
 interface Store {
   project: StudioProject | null;

@@ -10,8 +10,8 @@ import TextView from './views/TextView';
 import AiCenterView from './views/AiCenterView';
 import ExportView from './views/ExportView';
 import { backend } from './lib/backend';
-import { THEMES, currentTheme, applyTheme } from './lib/theme';
 import { Modal, Field } from './components/ui';
+import SettingsView from './views/SettingsView';
 
 const NAV = [
   { group: '项目', items: [
@@ -25,8 +25,11 @@ const NAV = [
     { id: 'text', ic: '💬', label: '对话文本' },
   ] },
   { group: '智能与发布', items: [
-    { id: 'ai', ic: '✨', label: 'AI 管理与生成' },
+    { id: 'ai', ic: '✨', label: 'AI 生成' },
     { id: 'export', ic: '📦', label: '导出模组' },
+  ] },
+  { group: '系统', items: [
+    { id: 'settings', ic: '⚙️', label: '设置' },
   ] },
 ];
 
@@ -37,8 +40,9 @@ const VIEW_TITLES: Record<string, [string, string]> = {
   anime: ['动画工坊', '动作配置 · 帧编排 · 实时预览'],
   food: ['食物物品', '商店物品与数值'],
   text: ['对话文本', '低状态 · 点击 · 选项文本'],
-  ai: ['AI 管理与生成', '服务商配置 · AI 生成素材/文案 · 调用日志'],
+  ai: ['AI 生成', '提示词模板 · 素材/文案生成 · 调用日志'],
   export: ['导出模组', '校验 · 目录预览 · 打包'],
+  settings: ['设置', '外观主题 · AI 服务商 · 关于'],
 };
 
 /** 侧栏顶部的桌宠切换器 */
@@ -102,27 +106,36 @@ function PetSwitcher() {
   );
 }
 
-/** 外观主题切换弹窗 */
-function ThemePickerModal({ onClose }: { onClose: () => void }) {
-  const [cur, setCur] = useState(currentTheme());
+/** 首页侧栏(无项目时) */
+function HomeNav() {
+  const s = useStore();
+  const items = [
+    { group: '开始', list: [
+      { id: 'home', ic: '🗂', label: '项目管理', hint: '' },
+    ] },
+    { group: '系统', list: [
+      { id: 'settings', ic: '⚙️', label: '设置', hint: '' },
+    ] },
+  ];
   return (
-    <Modal title="🎨 外观主题" onClose={onClose}
-      footer={<button className="btn" onClick={onClose}>完成</button>}>
-      <div className="card-desc" style={{ marginBottom: 14 }}>
-        选择喜欢的配色, 全局立即生效并自动记住(重启后保持)。「暗夜」为深色护眼主题, 其余为明亮主题。
+    <nav className="nav">
+      {items.map((g) => (
+        <React.Fragment key={g.group}>
+          <div className="nav-group">{g.group}</div>
+          {g.list.map((it) => (
+            <div key={it.id} className={`nav-item ${s.view === it.id ? 'active' : ''}`} onClick={() => s.setView(it.id as any)}>
+              <span className="ic">{it.ic}</span>{it.label}
+              {it.hint && <span className="badge">{it.hint}</span>}
+            </div>
+          ))}
+        </React.Fragment>
+      ))}
+      <div className="nav-group">快速上手</div>
+      <div className="nav-item" style={{ cursor: 'default' }}>
+        <span className="ic">🧭</span>
+        <span className="muted small" style={{ lineHeight: 1.5 }}>上传素材 → 切片<br />→ 绑定动作 → 导出</span>
       </div>
-      <div className="theme-grid">
-        {THEMES.map((t) => (
-          <div key={t.id} className={`theme-card ${cur === t.id ? 'active' : ''}`}
-            onClick={() => { applyTheme(t.id); setCur(t.id); }}>
-            <div className="swatch">{t.dots.map((c, i) => <i key={i} style={{ background: c }} />)}</div>
-            <div className="nm">{t.name}</div>
-            <div className="ds">{t.desc}</div>
-            {cur === t.id && <div className="on-mark">✓ 当前使用</div>}
-          </div>
-        ))}
-      </div>
-    </Modal>
+    </nav>
   );
 }
 
@@ -131,19 +144,18 @@ function Shell() {
   const p = s.project;
   const [browserMode, setBrowserMode] = useState(false);
   const [aiCount, setAiCount] = useState(0);
-  const [themeOpen, setThemeOpen] = useState(false);
 
   useEffect(() => { setBrowserMode(!backend.isDesktop); }, []);
   useEffect(() => { document.title = p ? `${p.meta.name} · VPet Studio` : 'VPet Studio · 桌宠模组工坊'; }, [p]);
   useEffect(() => {
     backend.getAiConfig().then((c) => setAiCount(c.providers.length)).catch(() => {});
-  }, [s.view === 'ai']);
+  }, [s.view === 'ai', s.view === 'settings']);
 
   useEffect(() => {
-    const open = () => setThemeOpen(true);
+    const open = () => s.setView('settings');
     window.addEventListener('open-theme-picker', open);
     return () => window.removeEventListener('open-theme-picker', open);
-  }, []);
+  }, [s]);
 
   return (
     <div className="app">
@@ -180,17 +192,9 @@ function Shell() {
             </div>
           </>
         ) : (
-          <nav className="nav">
-            <div className="nav-group">开始</div>
-            <div className={`nav-item ${s.view === 'home' ? 'active' : ''}`} onClick={() => s.setView('home')}>
-              <span className="ic">🗂</span>项目管理
-            </div>
-            <div className="nav-group">快速上手</div>
-            <div className="nav-item" style={{ cursor: 'default' }}>
-              <span className="ic">🧭</span>
-              <span className="muted small" style={{ lineHeight: 1.5 }}>上传素材 → 切片<br />→ 绑定动作 → 导出</span>
-            </div>
-          </nav>
+          <>
+            <HomeNav />
+          </>
         )}
       </aside>
 
@@ -204,10 +208,10 @@ function Shell() {
               </div>
               <div className="topbar-actions">
                 {browserMode && <span className="tag amber">浏览器演示模式</span>}
-                <button className="btn sm" onClick={() => setThemeOpen(true)} title="切换外观主题">🎨 外观</button>
+                <button className="btn sm" onClick={() => s.setView('settings')} title="外观 / AI 服务商 / 关于">⚙️ 设置</button>
                 <button className="btn sm" onClick={() => s.setView('ai')}>
                   <span className={`ai-dot ${aiCount ? 'on' : ''}`} />
-                  ✨ AI {aiCount ? `已配置 ${aiCount} 家` : '未配置, 点此设置'}
+                  ✨ AI {aiCount ? `已配置 ${aiCount} 家` : '未配置'}
                 </button>
                 <div className={`save-dot ${s.dirty ? 'dirty' : ''}`}>
                   <i />{s.saving ? '保存中…' : s.dirty ? '未保存' : '已自动保存'}
@@ -224,6 +228,23 @@ function Shell() {
               {s.view === 'text' && <TextView />}
               {s.view === 'ai' && <AiCenterView onProvidersChanged={(n) => setAiCount(n)} />}
               {s.view === 'export' && <ExportView />}
+              {s.view === 'settings' && <SettingsView onProvidersChanged={(n) => setAiCount(n)} />}
+            </div>
+          </>
+        ) : s.view === 'settings' ? (
+          <>
+            <div className="topbar">
+              <div>
+                <div className="topbar-title">⚙️ 设置</div>
+                <div className="topbar-sub">外观主题 · AI 服务商 · 关于（全局设置, 无需打开项目）</div>
+              </div>
+              <div className="topbar-actions">
+                {browserMode && <span className="tag amber">浏览器演示模式</span>}
+                <button className="btn sm" onClick={() => s.setView('home')}>← 返回项目管理</button>
+              </div>
+            </div>
+            <div className="content">
+              <SettingsView onProvidersChanged={(n) => setAiCount(n)} />
             </div>
           </>
         ) : (
@@ -238,8 +259,6 @@ function Shell() {
           <div key={t.id} className={`toast ${t.kind}`}>{t.kind === 'ok' ? '✓ ' : '✕ '}{t.msg}</div>
         ))}
       </div>
-
-      {themeOpen && <ThemePickerModal onClose={() => setThemeOpen(false)} />}
     </div>
   );
 }

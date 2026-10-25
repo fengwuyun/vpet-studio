@@ -1,7 +1,7 @@
 {
   "name": "vpet-studio",
   "productName": "VPet Studio",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "VPet 虚拟桌宠可视化模组工坊 —— 动画/素材/食物/文本可视化配置 + AI 辅助生成",
   "repository": {
     "type": "git",

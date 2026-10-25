@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VPet Studio · 桌宠模组工坊</title>
     <script>
-      // 启动前应用主题偏好, 避免主题闪烁
-      try { document.documentElement.dataset.theme = localStorage.getItem('vpet-theme') || 'sakura'; } catch (e) {}
+      // 启动前应用外观偏好, 避免主题闪烁
+      try {
+        document.documentElement.dataset.theme = localStorage.getItem('vpet-theme') || 'sakura';
+        if ((localStorage.getItem('vpet-pattern') || 'on') === 'off') document.documentElement.dataset.pattern = 'off';
+      } catch (e) {}
     </script>
   </head>
   <body>

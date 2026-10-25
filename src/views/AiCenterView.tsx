@@ -58,7 +58,7 @@ const TEMPLATES: {
 
 export default function AiCenterView({ onProvidersChanged }: { onProvidersChanged?: (n: number) => void }) {
   const s = useStore();
-  const [tab, setTab] = useState<'gen' | 'providers' | 'logs'>('providers');
+  const [tab, setTab] = useState<'gen' | 'logs'>('gen');
   const [cfg, setCfg] = useState<AiConfig>({ providers: [] });
   const [loaded, setLoaded] = useState(false);
 
@@ -78,20 +78,18 @@ export default function AiCenterView({ onProvidersChanged }: { onProvidersChange
     <div>
       <div className="tabs">
         <div className={`tab ${tab === 'gen' ? 'active' : ''}`} onClick={() => setTab('gen')}>🪄 AI 生成</div>
-        <div className={`tab ${tab === 'providers' ? 'active' : ''}`} onClick={() => setTab('providers')}>⚙️ 服务商管理 ({cfg.providers.length})</div>
         <div className={`tab ${tab === 'logs' ? 'active' : ''}`} onClick={() => setTab('logs')}>📊 调用日志 ({s.project!.aiLogs.length})</div>
       </div>
 
-      {!loaded ? <div className="empty">加载中…</div> : !cfg.providers.length && tab !== 'providers' ? (
+      {!loaded ? <div className="empty">加载中…</div> : !cfg.providers.length && tab === 'gen' ? (
         <div className="empty">
           <div className="big">🔌</div>
           还没有配置 AI 服务商<div className="muted small">AI 用于: 生成桌宠形象/精灵图素材、撰写宠物介绍与对话文本、起名</div>
-          <button className="btn primary" style={{ marginTop: 10 }} onClick={() => setTab('providers')}>去添加服务商 →</button>
+          <button className="btn primary" style={{ marginTop: 10 }} onClick={() => s.setView('settings')}>去 设置 → AI 服务商 添加</button>
         </div>
       ) : (
         <>
           {tab === 'gen' && <GenTab active={active} log={log} />}
-          {tab === 'providers' && <ProvidersTab cfg={cfg} onSave={saveCfg} />}
           {tab === 'logs' && <LogsTab />}
         </>
       )}
@@ -301,92 +299,6 @@ function GenTab({ active, log }: { active?: AiProvider; log: (l: any) => void })
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-/* ================= 服务商管理 ================= */
-function ProvidersTab({ cfg, onSave }: { cfg: AiConfig; onSave: (c: AiConfig) => void }) {
-  const s = useStore();
-  const [editing, setEditing] = useState<AiProvider | null>(null);
-  const [testing, setTesting] = useState<string | null>(null);
-
-  const test = async (pv: AiProvider) => {
-    setTesting(pv.id);
-    const t0 = Date.now();
-    const r = await backend.aiTest(pv);
-    s.update((d) => { d.aiLogs.unshift({ time: Date.now(), provider: pv.name, kind: 'test', model: pv.chatModel, ok: r.ok, message: r.message, costMs: Date.now() - t0 }); });
-    s.toast(`${pv.name}: ${r.message}`, r.ok ? 'ok' : 'err');
-    setTesting(null);
-  };
-
-  return (
-    <div>
-      <div className="card">
-        <div className="card-title">🔌 AI 服务商</div>
-        <div className="card-desc">兼容一切 OpenAI 接口格式的服务(官方/智谱/DeepSeek/中转站…)。密钥仅保存在本机, 调用由桌面版后台发起。聊天走 <span className="mono">/chat/completions</span>, 生图走 <span className="mono">/images/generations</span></div>
-        <button className="btn primary" style={{ marginBottom: 14 }} onClick={() => setEditing({ id: newId('pv'), name: '', baseUrl: '', apiKey: '', chatModel: '', imageModel: '', enabled: true })}>＋ 添加服务商</button>
-        {!cfg.providers.length ? <div className="empty"><div className="big">🔌</div>还没有服务商</div> : (
-          <table className="tbl">
-            <thead><tr><th>名称</th><th>接口地址</th><th>聊天模型</th><th>生图模型</th><th>状态</th><th style={{ width: 240 }}>操作</th></tr></thead>
-            <tbody>
-              {cfg.providers.map((pv) => (
-                <tr key={pv.id}>
-                  <td><b>{pv.name}</b> {cfg.activeProviderId === pv.id && <span className="tag pink">默认</span>}</td>
-                  <td className="mono small">{pv.baseUrl}</td>
-                  <td className="small">{pv.chatModel || '-'}</td>
-                  <td className="small">{pv.imageModel || '-'}</td>
-                  <td>{testing === pv.id ? <span className="tag amber">测试中…</span> : pv.enabled ? <span className="tag green">启用</span> : <span className="tag">停用</span>}</td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button className="btn sm" disabled={testing === pv.id} onClick={() => test(pv)}>测试</button>
-                      <button className="btn sm" onClick={() => setEditing(pv)}>编辑</button>
-                      <button className="btn sm" onClick={() => onSave({ ...cfg, activeProviderId: pv.id })}>设为默认</button>
-                      <button className="btn sm danger" onClick={() => { if (confirm(`删除服务商「${pv.name}」?`)) onSave({ ...cfg, providers: cfg.providers.filter((x) => x.id !== pv.id) }); }}>删</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {editing && (
-        <Modal title={cfg.providers.some((x) => x.id === editing.id) ? '编辑服务商' : '添加服务商'} onClose={() => setEditing(null)}
-          footer={<>
-            <button className="btn" onClick={() => setEditing(null)}>取消</button>
-            <button className="btn primary" onClick={() => {
-              if (!editing.name.trim() || !editing.baseUrl.trim()) return s.toast('名称和接口地址必填', 'err');
-              const exists = cfg.providers.some((x) => x.id === editing.id);
-              const providers = exists ? cfg.providers.map((x) => (x.id === editing.id ? editing : x)) : [...cfg.providers, editing];
-              onSave({ ...cfg, providers, activeProviderId: cfg.activeProviderId || editing.id });
-              setEditing(null);
-              s.toast('已保存服务商配置');
-            }}>保存</button>
-          </>}>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-            <span className="muted small">快速填充:</span>
-            {PRESETS.map((pr) => (
-              <button key={pr.name} className="btn sm" onClick={() => setEditing({ ...editing, ...pr, name: pr.name === '自定义 / 中转站' ? '' : pr.name })}>{pr.name}</button>
-            ))}
-          </div>
-          <div className="row">
-            <Field label="名称"><input className="input" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} placeholder="我的 OpenAI" /></Field>
-            <Field label="接口 Base URL" hint="一般以 /v1 结尾"><input className="input mono" value={editing.baseUrl} onChange={(e) => setEditing({ ...editing, baseUrl: e.target.value.trim() })} placeholder="https://api.openai.com/v1" /></Field>
-          </div>
-          <Field label="API Key" hint="仅保存在本机 userData/ai-config.json">
-            <input className="input mono" type="password" value={editing.apiKey} onChange={(e) => setEditing({ ...editing, apiKey: e.target.value.trim() })} placeholder="sk-…" />
-          </Field>
-          <div className="row">
-            <Field label="聊天模型" hint="文案/台词/起名使用"><input className="input mono" value={editing.chatModel} onChange={(e) => setEditing({ ...editing, chatModel: e.target.value.trim() })} placeholder="gpt-4o-mini" /></Field>
-            <Field label="生图模型" hint="生成素材图使用"><input className="input mono" value={editing.imageModel} onChange={(e) => setEditing({ ...editing, imageModel: e.target.value.trim() })} placeholder="gpt-image-1 / cogview-3-plus" /></Field>
-          </div>
-          <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13 }}>
-            <input type="checkbox" checked={editing.enabled} onChange={(e) => setEditing({ ...editing, enabled: e.target.checked })} /> 启用该服务商
-          </label>
-        </Modal>
-      )}
     </div>
   );
 }

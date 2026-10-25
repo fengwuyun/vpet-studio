@@ -98,7 +98,7 @@ export default function FoodView() {
                 </select>
               </Field>
               <Field label="描述"><textarea className="input" value={editing.desc} onChange={(e) => setEditing({ ...editing, desc: e.target.value })} placeholder="商店里显示的说明文字" /></Field>
-              <div className="row">
+              <div className="row wrap-hints">
                 {NUM_FIELDS.map(([k, label, hint]) => (
                   <Field key={k} label={label} hint={hint}>
                     <input className="input" type="number" value={(editing as any)[k]} onChange={(e) => setEditing({ ...editing, [k]: Number(e.target.value) || 0 })} />

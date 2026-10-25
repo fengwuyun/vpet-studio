@@ -46,7 +46,7 @@ export default function HomeView() {
         <div style={{ display: 'flex', gap: 12, marginTop: 24, flexWrap: 'wrap' }}>
           <button className="btn primary" onClick={() => setCreating(true)}>＋ 新建模组项目</button>
           <button className="btn" onClick={refresh}>🔄 刷新列表</button>
-          <button className="btn" onClick={() => window.dispatchEvent(new CustomEvent('open-theme-picker'))}>🎨 外观主题</button>
+          <button className="btn" onClick={() => s.setView('settings')}>⚙️ 设置</button>
         </div>
         <div className="muted small" style={{ marginTop: 14 }}>
           🐾 进入项目后, 左上角可随时<b>切换/添加桌宠</b>; 顶栏与工作台都有 <b>✨ AI 管理与生成</b> 入口(配置服务商后可用文生图和文案助手)

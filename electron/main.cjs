@@ -58,11 +58,25 @@ function createWindow() {
   win.setMenu(null);
 }
 
-app.whenReady().then(() => {
-  handleAssetProtocol();
-  createWindow();
-});
-app.on('window-all-closed', () => app.quit());
+// 单实例锁: 二次启动时聚焦已有窗口, 不开新窗口
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (win) {
+      if (win.isMinimized()) win.restore();
+      win.show();
+      win.focus();
+    }
+  });
+
+  app.whenReady().then(() => {
+    handleAssetProtocol();
+    createWindow();
+  });
+  app.on('window-all-closed', () => app.quit());
+}
 
 // ---------- 工具 ----------
 function pngSize(buf) {

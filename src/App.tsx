@@ -208,7 +208,6 @@ function Shell() {
               </div>
               <div className="topbar-actions">
                 {browserMode && <span className="tag amber">浏览器演示模式</span>}
-                <button className="btn sm" onClick={() => s.setView('settings')} title="外观 / AI 服务商 / 关于">⚙️ 设置</button>
                 <button className="btn sm" onClick={() => s.setView('ai')}>
                   <span className={`ai-dot ${aiCount ? 'on' : ''}`} />
                   ✨ AI {aiCount ? `已配置 ${aiCount} 家` : '未配置'}

@@ -30,6 +30,9 @@ interface Store {
   /** AI 生成图 → 素材工坊切片的种子通道 */
   wizardSeed: { dataUrl: string; name: string } | null;
   setWizardSeed: (s: { dataUrl: string; name: string } | null) => void;
+  /** 工作台清单 → AI 生成的任务通道: 预选模板或文案任务 */
+  aiTask: { tplId?: string; chat?: 'intro' | 'texts' | 'names'; note?: string } | null;
+  setAiTask: (t: { tplId?: string; chat?: 'intro' | 'texts' | 'names'; note?: string } | null) => void;
 }
 
 const Ctx = createContext<Store>(null as any);
@@ -131,6 +134,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const [wizardSeed, setWizardSeed] = useState<{ dataUrl: string; name: string } | null>(null);
+  const [aiTask, setAiTask] = useState<{ tplId?: string; chat?: 'intro' | 'texts' | 'names'; note?: string } | null>(null);
 
   const importImages = useCallback(async (imgs: { name: string; dataUrl: string }[], source: Asset['source'] = 'upload', kind: Asset['kind'] = 'raw') => {
     const pid = projectRef.current!.meta.id;
@@ -187,8 +191,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<Store>(() => ({
     project, setProject, update, saving, dirty, view, setView, toast, toasts,
     assetCache: assetCache.current, assetUrl, loadAssetUrls, importImages, refreshProject,
-    activePet, switchPet, addPet, removePet, wizardSeed, setWizardSeed,
-  }), [project, saving, dirty, view, toasts, toast, setProject, update, assetUrl, loadAssetUrls, importImages, refreshProject, activePet, switchPet, addPet, removePet, wizardSeed]);
+    activePet, switchPet, addPet, removePet, wizardSeed, setWizardSeed, aiTask, setAiTask,
+  }), [project, saving, dirty, view, toasts, toast, setProject, update, assetUrl, loadAssetUrls, importImages, refreshProject, activePet, switchPet, addPet, removePet, wizardSeed, aiTask]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

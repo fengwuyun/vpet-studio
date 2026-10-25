@@ -11,18 +11,18 @@ export default function OverviewView({ aiCount }: { aiCount: number }) {
   const petAnims = p.animations.filter((a) => a.petId === pet.id);
   const has = (g: string) => petAnims.some((a) => a.graphType === g && a.frames.length);
 
-  // 制作清单(按当前宠物)
+  // 制作清单(按当前宠物) — 每步都可一键带入项目上下文跳转 AI 生成
   const checks = [
-    { label: `填写「${pet.i18nName || '宠物'}」资料(名称/介绍)`, done: !!pet.i18nName && !!pet.i18nIntro, link: 'pet' },
-    { label: '设置模组图标 icon.png', done: !!p.meta.iconAssetId, link: 'pet' },
-    { label: '上传/生成素材帧', done: p.assets.length > 0, link: 'assets' },
-    { label: '配置「呼吸/待机」动画(必备)', done: has('Default'), link: 'anime' },
-    { label: '配置「开机」动画', done: has('StartUP'), link: 'anime' },
-    { label: '配置「睡觉/说话/提起」动画', done: ['Sleep', 'Say', 'Raised_Static', 'Raised_Dynamic'].every(has), link: 'anime' },
-    { label: '配置摸头/摸身体动画', done: ['Touch_Head', 'Touch_Body'].every(has), link: 'anime' },
-    { label: '配置移动动画(左右行走)', done: has('Move'), link: 'anime' },
-    { label: '添加食物物品(可选)', done: p.foods.length > 0, link: 'food' },
-    { label: '添加对话文本(可选)', done: p.texts.low.length + p.texts.click.length + p.texts.select.length > 0, link: 'text' },
+    { label: `填写「${pet.i18nName || '宠物'}」资料(名称/介绍)`, done: !!pet.i18nName && !!pet.i18nIntro, link: 'pet', ai: { chat: 'intro' as const, note: '已选择「宠物介绍文案」任务, 将基于项目信息生成并回填' } },
+    { label: '设置模组图标 icon.png', done: !!p.meta.iconAssetId, link: 'pet', ai: { tplId: 'icon' } },
+    { label: '上传/生成素材帧', done: p.assets.length > 0, link: 'assets', ai: { tplId: 'idle', note: '生成待机精灵图后, 点结果上的「入库并去切片」直接进入素材流程' } },
+    { label: '配置「呼吸/待机」动画(必备)', done: has('Default'), link: 'anime', ai: { tplId: 'idle' } },
+    { label: '配置「开机」动画', done: has('StartUP'), link: 'anime', ai: { tplId: 'idle', note: '暂无开机专用模板: 可先生成待机帧, 再在动画工坊改绑为开机' } },
+    { label: '配置「睡觉/说话/提起」动画', done: ['Sleep', 'Say', 'Raised_Static', 'Raised_Dynamic'].every(has), link: 'anime', ai: { tplId: 'sleep' } },
+    { label: '配置摸头/摸身体动画', done: ['Touch_Head', 'Touch_Body'].every(has), link: 'anime', ai: { tplId: 'touch' } },
+    { label: '配置移动动画(左右行走)', done: has('Move'), link: 'anime', ai: { tplId: 'walk' } },
+    { label: '添加食物物品(可选)', done: p.foods.length > 0, link: 'food', ai: { tplId: 'food' } },
+    { label: '添加对话文本(可选)', done: p.texts.low.length + p.texts.click.length + p.texts.select.length > 0, link: 'text', ai: { chat: 'texts' as const, note: '已选择「低状态/互动台词」任务, 将基于桌宠名与角色设定生成' } },
   ];
   const progress = Math.round((checks.filter((c) => c.done).length / checks.length) * 100);
 
@@ -59,10 +59,15 @@ export default function OverviewView({ aiCount }: { aiCount: number }) {
             <div style={{ width: `${progress}%`, height: '100%', background: 'var(--accent-grad)', transition: 'width .3s' }} />
           </div>
           {checks.map((c, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 4px', borderBottom: '1px solid #f7ebf3', cursor: c.link ? 'pointer' : 'default' }}
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 4px', borderBottom: '1px solid var(--divider)', cursor: c.link ? 'pointer' : 'default' }}
               onClick={() => c.link && s.setView(c.link as any)}>
               <span style={{ color: c.done ? '#0e9f6e' : 'var(--text2)' }}>{c.done ? '✓' : '○'}</span>
               <span style={{ flex: 1, color: c.done ? 'var(--text1)' : 'var(--text0)', fontSize: 13 }}>{c.label}</span>
+              {c.ai && (
+                <button className="btn sm" style={{ padding: '3px 10px', fontSize: 11.5 }}
+                  title="携带项目上下文跳转 AI 生成"
+                  onClick={(e) => { e.stopPropagation(); s.setAiTask(c.ai as any); s.setView('ai'); }}>✨ AI</button>
+              )}
               {c.link && <span className="muted small">去处理 →</span>}
             </div>
           ))}

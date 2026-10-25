@@ -13,46 +13,56 @@ const PRESETS = [
 
 const STYLES = ['Q版厚涂', '像素风 16-bit', '日系赛璐璐', '手绘水彩', '3D 盲盒渲染', '黏土风格'];
 
-/** 素材提示词模板库: build(char, style, frames) 返回完整提示词 */
+/** 模板构建上下文: 提示词自动携带项目信息 */
+export interface TplCtx {
+  char: string;      // 角色设定
+  style: string;     // 画风
+  frames: number;    // 帧数
+  petName: string;   // 桌宠名
+  modName: string;   // 模组名
+  tags: string;      // 标签
+}
+
+/** 素材提示词模板库: 每个提示词都携带项目上下文(模组/桌宠/角色/画风) */
 const TEMPLATES: {
   id: string; icon: string; name: string; desc: string; sheet?: boolean;
-  size: string; frames: number; build: (c: string, s: string, f: number) => string;
+  size: string; frames: number; build: (c: TplCtx) => string;
 }[] = [
   {
     id: 'idle', icon: '🌬', name: '待机呼吸', desc: '站立轻微起伏+眨眼, 对应 Default 动作', sheet: true, size: '1024x1024', frames: 4,
-    build: (c, s, f) => `${c} 的桌面宠物「待机呼吸」动画精灵图 sprite sheet, 正面Q版全身站姿, ${f} 帧横向等大排列, 仅身体轻微起伏和眨眼, 角色始终居中, ${s}风格, 透明背景纯角色, 每帧尺寸完全一致, 脚底基线严格对齐, 无文字无水印`,
+    build: (x) => `为桌宠模组「${x.modName}」的桌宠「${x.petName}」制作「待机呼吸」动画精灵图 sprite sheet, 正面Q版全身站姿, ${x.frames} 帧横向等大排列, 仅身体轻微起伏和眨眼, 角色始终居中。角色设定: ${x.char}。画风: ${x.style}。要求: 透明背景纯角色, 每帧尺寸完全一致, 脚底基线严格对齐, 无文字无水印`,
   },
   {
     id: 'walk', icon: '🚶', name: '行走循环', desc: '侧面行走, 可镜像复用左右方向 (Move)', sheet: true, size: '1536x1024', frames: 6,
-    build: (c, s, f) => `${c} 的桌面宠物「侧面行走」动画精灵图 sprite sheet, 侧视全身, ${f} 帧横向等大排列组成一个完整步伐循环, 步幅均匀, 前后帧衔接自然, ${s}风格, 透明背景纯角色, 每帧尺寸完全一致, 脚底基线严格对齐, 无文字无水印`,
+    build: (x) => `为桌宠模组「${x.modName}」的桌宠「${x.petName}」制作「侧面行走」动画精灵图 sprite sheet, 侧视全身, ${x.frames} 帧横向等大排列组成一个完整步伐循环, 步幅均匀, 前后帧衔接自然。角色设定: ${x.char}。画风: ${x.style}。要求: 透明背景纯角色, 每帧尺寸完全一致, 脚底基线严格对齐, 无文字无水印`,
   },
   {
     id: 'touch', icon: '🖐', name: '互动反应', desc: '被摸头时的开心反应 (Touch_Head)', sheet: true, size: '1024x1024', frames: 4,
-    build: (c, s, f) => `${c} 的桌面宠物「被摸头」互动反应动画精灵图, 正面Q版, ${f} 帧横向等大排列: 表情从平静→惊讶→眯眼享受→恢复, 动作幅度适中, ${s}风格, 透明背景纯角色, 每帧尺寸完全一致, 脚底基线对齐, 无文字无水印`,
+    build: (x) => `为桌宠模组「${x.modName}」的桌宠「${x.petName}」制作「被摸头」互动反应动画精灵图, 正面Q版, ${x.frames} 帧横向等大排列: 表情从平静→惊讶→眯眼享受→恢复, 动作幅度适中。角色设定: ${x.char}。画风: ${x.style}。要求: 透明背景纯角色, 每帧尺寸完全一致, 脚底基线对齐, 无文字无水印`,
   },
   {
     id: 'sleep', icon: '💤', name: '睡觉', desc: '趴睡呼吸 (Sleep)', sheet: true, size: '1024x1024', frames: 4,
-    build: (c, s, f) => `${c} 的桌面宠物「趴着睡觉」动画精灵图, 侧视, ${f} 帧横向等大排列, 缓慢呼吸起伏, 偶尔耳朵轻动, ${s}风格, 透明背景纯角色, 每帧尺寸完全一致, 无文字无水印`,
+    build: (x) => `为桌宠模组「${x.modName}」的桌宠「${x.petName}」制作「趴着睡觉」动画精灵图, 侧视, ${x.frames} 帧横向等大排列, 缓慢呼吸起伏, 偶尔耳朵轻动。角色设定: ${x.char}。画风: ${x.style}。要求: 透明背景纯角色, 每帧尺寸完全一致, 无文字无水印`,
   },
   {
     id: 'raise', icon: '🎈', name: '被提起', desc: '悬空下垂微摆 (Raised)', sheet: true, size: '1024x1024', frames: 4,
-    build: (c, s, f) => `${c} 的桌面宠物「被提起悬空」动画精灵图, 正面全身, ${f} 帧横向等大排列, 身体下垂四肢微摆的循环, ${s}风格, 透明背景纯角色, 每帧尺寸完全一致, 无文字无水印`,
+    build: (x) => `为桌宠模组「${x.modName}」的桌宠「${x.petName}」制作「被提起悬空」动画精灵图, 正面全身, ${x.frames} 帧横向等大排列, 身体下垂四肢微摆的循环。角色设定: ${x.char}。画风: ${x.style}。要求: 透明背景纯角色, 每帧尺寸完全一致, 无文字无水印`,
   },
   {
     id: 'switch', icon: '🔄', name: '状态变化', desc: '精力充沛→疲惫过渡 (Switch_Down)', sheet: true, size: '1024x1024', frames: 4,
-    build: (c, s, f) => `${c} 的桌面宠物「精神变疲惫」状态过渡动画精灵图, 正面全身, ${f} 帧横向等大排列, 姿态从精神饱满逐渐变得蔫蔫的, ${s}风格, 透明背景纯角色, 每帧尺寸完全一致, 无文字无水印`,
+    build: (x) => `为桌宠模组「${x.modName}」的桌宠「${x.petName}」制作「精神变疲惫」状态过渡动画精灵图, 正面全身, ${x.frames} 帧横向等大排列, 姿态从精神饱满逐渐变得蔫蔫的。角色设定: ${x.char}。画风: ${x.style}。要求: 透明背景纯角色, 每帧尺寸完全一致, 无文字无水印`,
   },
   {
     id: 'icon', icon: '🏷', name: '模组图标', desc: '头像特写, 用于 icon.png', size: '1024x1024', frames: 1,
-    build: (c, s) => `${c} 的桌面宠物模组图标, 头像特写居中构图, 保留圆形裁切安全边距, 表情可爱有神, ${s}风格, 透明背景, 干净无杂物, 无文字无水印`,
+    build: (x) => `桌宠模组「${x.modName}」的应用图标, 主体是桌宠「${x.petName}」的头像特写居中构图, 保留圆形裁切安全边距, 表情可爱有神。角色设定: ${x.char}。画风: ${x.style}。要求: 透明背景, 干净无杂物, 无文字无水印`,
   },
   {
     id: 'food', icon: '🍰', name: '食物图标', desc: '等距视角道具图, 用于食物物品', size: '1024x1024', frames: 1,
-    build: (c, s) => `${c} 世界观里的桌宠食物道具图, 等距视角 isometric, 单个物品居中, 摆盘精致, ${s}风格, 透明背景, 无文字无水印`,
+    build: (x) => `桌宠模组「${x.modName}」(主角是桌宠「${x.petName}」)世界观里的宠物食物道具图, 等距视角 isometric, 单个物品居中, 摆盘精致。画风: ${x.style}。要求: 透明背景, 无文字无水印`,
   },
   {
     id: 'portrait', icon: '🖼', name: '角色立绘', desc: '三视图设定, 作为切片/绘制参考', size: '1024x1536', frames: 1,
-    build: (c, s) => `${c} 的角色设定立绘, 正面/侧面/背面三视图, 全身, 比例统一, ${s}风格, 纯色浅背景, 细节清晰, 无文字无水印`,
+    build: (x) => `桌宠「${x.petName}」(模组「${x.modName}」)的角色设定立绘, 正面/侧面/背面三视图, 全身, 比例统一。角色设定: ${x.char}。画风: ${x.style}。要求: 纯色浅背景, 细节清晰, 无文字无水印`,
   },
 ];
 
@@ -81,15 +91,9 @@ export default function AiCenterView({ onProvidersChanged }: { onProvidersChange
         <div className={`tab ${tab === 'logs' ? 'active' : ''}`} onClick={() => setTab('logs')}>📊 调用日志 ({s.project!.aiLogs.length})</div>
       </div>
 
-      {!loaded ? <div className="empty">加载中…</div> : !cfg.providers.length && tab === 'gen' ? (
-        <div className="empty">
-          <div className="big">🔌</div>
-          还没有配置 AI 服务商<div className="muted small">AI 用于: 生成桌宠形象/精灵图素材、撰写宠物介绍与对话文本、起名</div>
-          <button className="btn primary" style={{ marginTop: 10 }} onClick={() => s.setView('settings')}>去 设置 → AI 服务商 添加</button>
-        </div>
-      ) : (
+      {!loaded ? <div className="empty">加载中…</div> : (
         <>
-          {tab === 'gen' && <GenTab active={active} log={log} />}
+          {tab === 'gen' && <GenTab active={active} log={log} hasProvider={!!cfg.providers.length} onGoSettings={() => s.setView('settings')} />}
           {tab === 'logs' && <LogsTab />}
         </>
       )}
@@ -98,7 +102,7 @@ export default function AiCenterView({ onProvidersChanged }: { onProvidersChange
 }
 
 /* ================= AI 生成 ================= */
-function GenTab({ active, log }: { active?: AiProvider; log: (l: any) => void }) {
+function GenTab({ active, log, hasProvider, onGoSettings }: { active?: AiProvider; log: (l: any) => void; hasProvider?: boolean; onGoSettings?: () => void }) {
   const s = useStore();
   const p = s.project!;
   const char = p.meta.character || '';
@@ -119,9 +123,25 @@ function GenTab({ active, log }: { active?: AiProvider; log: (l: any) => void })
   // 模板/设定变化时自动重拼提示词(手动编辑过后停止自动)
   useEffect(() => {
     if (!auto) return;
-    setPrompt(tpl.build(char || '一只可爱的原创角色', style, tpl.sheet ? frames : 1));
+    setPrompt(tpl.build({
+      char: char || '一只可爱的原创角色', style, frames: tpl.sheet ? frames : 1,
+      petName: s.activePet?.i18nName || p.meta.name, modName: p.meta.name, tags: p.meta.tags || '',
+    }));
     setSize(tpl.size);
-  }, [tplId, char, style, frames, auto]);
+  }, [tplId, char, style, frames, auto, s.activePet?.i18nName, p.meta.name]);
+
+  // 工作台清单等入口带入的 AI 任务: 预选模板/文案任务并携带上下文
+  useEffect(() => {
+    const t = s.aiTask;
+    if (!t) return;
+    if (t.tplId) {
+      const target = TEMPLATES.find((x) => x.id === t.tplId);
+      if (target) { setTplId(target.id); setFrames(target.frames); setAuto(true); }
+    }
+    if (t.chat) setChatKind(t.chat);
+    s.setAiTask(null);
+    s.toast(t.note || '已带入项目上下文, 提示词按当前设定自动生成');
+  }, [s.aiTask]);
 
   const genImage = async () => {
     if (!active || !prompt.trim()) return;
@@ -236,18 +256,25 @@ function GenTab({ active, log }: { active?: AiProvider; log: (l: any) => void })
                   {['1024x1024', '1536x1024', '1024x1536', '512x512'].map((x) => <option key={x}>{x}</option>)}
                 </select></Field>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-                  {!auto && <button className="btn sm" onClick={() => { setAuto(true); setPrompt(tpl.build(char || '一只可爱的原创角色', style, frames)); }}>按模板重拼</button>}
+                  {!auto && <button className="btn sm" onClick={() => { setAuto(true); setPrompt(tpl.build({ char: char || '一只可爱的原创角色', style, frames: tpl.sheet ? frames : 1, petName: s.activePet?.i18nName || p.meta.name, modName: p.meta.name, tags: p.meta.tags || '' })); }}>按模板重拼</button>}
                 </div>
               </div>
             )}
             <div className="field">
-              <label>完整提示词{auto ? '(随设定自动更新, 可直接编辑)' : '(已手动编辑)'}</label>
+              <label>完整提示词{auto ? '(自动携带项目上下文, 可直接编辑)' : '(已手动编辑)'}</label>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
+                <span className="tag blue">模组: {p.meta.name}</span>
+                <span className="tag pink">桌宠: {s.activePet?.i18nName || p.meta.name}</span>
+                <span className="tag teal">画风: {style}</span>
+                {char ? <span className="tag green">✓ 已含角色设定</span> : <button className="tag amber" style={{ cursor: 'pointer' }} onClick={() => s.setView('ai')}>未填角色设定, 建议补充</button>}
+              </div>
               <textarea className="input" rows={5} value={prompt} onChange={(e) => { setAuto(false); setPrompt(e.target.value); }} />
             </div>
             {!tpl.sheet && size !== tpl.size && <div className="muted small" style={{ marginBottom: 8 }}>该模板建议尺寸 {tpl.size}</div>}
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
               <button className="btn primary" disabled={busy || !prompt.trim() || !active?.imageModel} onClick={genImage}>{busy ? '生成中…(最长5分钟)' : '🪄 生成图片'}</button>
-              {!active?.imageModel && <span className="tag amber">请先在「服务商管理」填写生图模型</span>}
+              {!hasProvider && <button className="btn sm" onClick={onGoSettings}>⚙️ 未配置服务商, 去设置后即可生成</button>}
+              {!!hasProvider && !active?.imageModel && <span className="tag amber">请先在「设置 → AI 服务商」填写生图模型</span>}
             </div>
           </div>
         </div>

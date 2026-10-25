@@ -1,0 +1,75 @@
+{
+  "name": "vpet-studio",
+  "productName": "VPet Studio",
+  "version": "1.0.0",
+  "description": "VPet 虚拟桌宠可视化模组工坊 —— 动画/素材/食物/文本可视化配置 + AI 辅助生成",
+  "repository": { "type": "git", "url": "https://github.com/fengwuyun/vpet-studio" },
+  "author": "fengwuyun",
+  "license": "MIT",
+  "main": "electron/main.cjs",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "build:fast": "vite build",
+    "desktop": "vite build && electron .",
+    "icon": "node scripts/make-icon.cjs",
+    "predist": "vite build",
+    "dist": "electron-builder --win --x64",
+    "preview": "vite preview"
+  },
+  "build": {
+    "appId": "io.github.vpet.studio",
+    "productName": "VPet Studio",
+    "copyright": "MIT License",
+    "publish": null,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "build/icon.png"
+    ],
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "artifactName": "VPet-Studio-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "VPet-Studio-Portable-${version}.${ext}"
+    }
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^33.2.0",
+    "electron-builder": "^26.18.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11"
+  }
+}

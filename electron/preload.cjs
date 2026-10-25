@@ -1,0 +1,24 @@
+// ============ VPet Studio · 预加载 ============
+const { contextBridge, ipcRenderer } = require('electron');
+
+contextBridge.exposeInMainWorld('vpetRaw', {
+  projectsRoot: () => ipcRenderer.invoke('projects-root'),
+  listProjects: () => ipcRenderer.invoke('list-projects'),
+  createProject: (p) => ipcRenderer.invoke('create-project', p),
+  saveProject: (p) => ipcRenderer.invoke('save-project', p),
+  loadProject: (id) => ipcRenderer.invoke('load-project', id),
+  deleteProject: (id) => ipcRenderer.invoke('delete-project', id),
+  importAssetData: (projectId, name, dataUrl) => ipcRenderer.invoke('import-asset-data', projectId, name, dataUrl),
+  readAsset: (projectId, fileName) => ipcRenderer.invoke('read-asset', projectId, fileName),
+  deleteAsset: (projectId, fileName) => ipcRenderer.invoke('delete-asset', projectId, fileName),
+  pickImages: () => ipcRenderer.invoke('pick-images'),
+  pickSaveDir: () => ipcRenderer.invoke('pick-save-dir'),
+  openPath: (p) => ipcRenderer.invoke('open-path', p),
+  showInFolder: (p) => ipcRenderer.invoke('show-in-folder', p),
+  exportMod: (projectId, targetDir, payload, makeZip) => ipcRenderer.invoke('export-mod', projectId, targetDir, payload, makeZip),
+  getAiConfig: () => ipcRenderer.invoke('get-ai-config'),
+  setAiConfig: (json) => ipcRenderer.invoke('set-ai-config', json),
+  aiTest: (provider) => ipcRenderer.invoke('ai-test', provider),
+  aiChat: (provider, system, user) => ipcRenderer.invoke('ai-chat', provider, system, user),
+  aiImage: (provider, prompt, size) => ipcRenderer.invoke('ai-image', provider, prompt, size),
+});

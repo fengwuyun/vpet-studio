@@ -75,6 +75,8 @@ export function buildExport(p: StudioProject): FileMap {
     ]));
   }
   files.set('info.lps', { kind: 'text', content: doc(infoLines) });
+  // Studio 导出标记: 安装时用于区分"自己的产物可覆盖"与"用户手工目录需备份"
+  files.set('.vpetstudio', { kind: 'text', content: 'made by VPet Studio' });
 
   // ---- icon.png ----
   if (m.iconAssetId) files.set('icon.png', { kind: 'asset', assetId: m.iconAssetId });
@@ -235,4 +237,41 @@ export function unusedAssets(p: StudioProject): Asset[] {
   for (const a of p.animations) a.frames.forEach((f) => used.add(f.assetId));
   for (const f of p.foods) f.imageAssetId && used.add(f.imageAssetId);
   return p.assets.filter((a) => !used.has(a.id));
+}
+
+/** 首页项目级完成度(项目级宽化: 任一宠物满足即可) 与 可启动判定 */
+export function projectProgress(p: StudioProject): { pct: number; ready: boolean; errors: number; warnings: number } {
+  const v = validate(p);
+  const has = (g: string) => p.animations.some((a) => a.graphType === g && a.frames.length);
+  const checks = [
+    !!p.pets[0]?.i18nName && !!p.pets[0]?.i18nIntro,
+    !!p.meta.iconAssetId,
+    p.assets.length > 0,
+    has('Default'),
+    has('StartUP'),
+    ['Sleep', 'Say', 'Raised_Static', 'Raised_Dynamic'].every(has),
+    ['Touch_Head', 'Touch_Body'].every(has),
+    has('Move'),
+  ];
+  const pct = Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  return { pct, ready: v.ok, errors: v.errors.length, warnings: v.warnings.length };
+}
+
+/** 组装导出/安装载荷: 桌面版只传文件名引用, 浏览器演示传 dataURL */
+export function buildPayload(p: StudioProject, opts: { isDesktop: boolean; assetUrl: (id: string) => string | undefined }): { path: string; kind: 'text' | 'asset'; content: string; fileName?: string; assetId?: string }[] {
+  const files = buildExport(p);
+  const assetMap = new Map(p.assets.map((a) => [a.id, a] as const));
+  const out: { path: string; kind: 'text' | 'asset'; content: string; fileName?: string; assetId?: string }[] = [];
+  for (const [fpath, f] of files) {
+    if (f.kind === 'text') out.push({ path: fpath, kind: 'text', content: f.content });
+    else {
+      const asset = assetMap.get(f.assetId);
+      out.push({
+        path: fpath, kind: 'asset',
+        fileName: asset?.fileName, assetId: f.assetId,
+        content: opts.isDesktop ? '' : opts.assetUrl(f.assetId) || '',
+      });
+    }
+  }
+  return out;
 }

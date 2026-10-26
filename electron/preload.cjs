@@ -21,4 +21,11 @@ contextBridge.exposeInMainWorld('vpetRaw', {
   aiTest: (provider) => ipcRenderer.invoke('ai-test', provider),
   aiChat: (provider, system, user) => ipcRenderer.invoke('ai-chat', provider, system, user),
   aiImage: (provider, prompt, size) => ipcRenderer.invoke('ai-image', provider, prompt, size),
+  getLaunchConfig: () => ipcRenderer.invoke('get-launch-config'),
+  setLaunchConfig: (json) => ipcRenderer.invoke('set-launch-config', json),
+  detectVpetDir: () => ipcRenderer.invoke('detect-vpet-dir'),
+  probeVpetDir: (dir) => ipcRenderer.invoke('probe-vpet-dir', dir),
+  pickGameDir: () => ipcRenderer.invoke('pick-game-dir'),
+  checkModInstalled: (projectId, gameDir) => ipcRenderer.invoke('check-mod-installed', projectId, gameDir),
+  installAndLaunch: (projectId, gameDir, payload, launch) => ipcRenderer.invoke('install-and-launch', projectId, gameDir, payload, launch),
 });

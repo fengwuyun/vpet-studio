@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useStore } from '../lib/store';
-import { validate, buildExport, buildTree } from '../lib/engine';
+import { validate, buildExport, buildTree, buildPayload } from '../lib/engine';
 import { backend } from '../lib/backend';
 
 export default function ExportView() {
@@ -19,23 +19,10 @@ export default function ExportView() {
     try {
       const dir = await backend.pickSaveDir();
       if (!dir) { setLog([]); setBusy(false); return; }
-      // 组装文件载荷: 桌面版只传 fileName 引用由主进程从磁盘读取(避免渲染进程临时持有全部 base64);
-      // 浏览器演示模式附带 dataURL
-      const payload: { path: string; kind: 'text' | 'asset'; content: string; fileName?: string }[] = [];
-      const assetMap = new Map(p.assets.map((a) => [a.id, a] as const));
-      for (const [fpath, f] of files) {
-        if (f.kind === 'text') payload.push({ path: fpath, kind: 'text', content: f.content });
-        else {
-          const asset = assetMap.get(f.assetId);
-          payload.push({
-            path: fpath, kind: 'asset',
-            fileName: asset?.fileName,
-            content: backend.isDesktop ? '' : s.assetUrl(f.assetId) || '',
-          });
-        }
-      }
-      const missing = payload.filter((x) => x.kind === 'asset' && !x.content).length;
-      const r = await backend.exportMod(p.meta.id, dir, { files: payload }, zip);
+      // 组装文件载荷: 桌面版只传 fileName 引用由主进程从磁盘读取; 浏览器演示模式附带 dataURL
+      const payload = { files: buildPayload(p, { isDesktop: backend.isDesktop, assetUrl: s.assetUrl }) };
+      const missing = payload.files.filter((x) => x.kind === 'asset' && !x.content && !x.fileName).length;
+      const r = await backend.exportMod(p.meta.id, dir, payload, zip);
       setLog([
         missing ? `⚠️ ${missing} 个素材文件缺失(可能已被删除), 请检查` : '✓ 素材文件全部就位',
         ...r.log.map((l) => (l.startsWith('+') ? `  ${l}` : l)),

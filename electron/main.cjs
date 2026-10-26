@@ -220,6 +220,103 @@ ipcMain.handle('export-mod', async (_e, projectId, targetDir, payload, makeZip) 
   return { log, zipPath, dir: outRoot };
 });
 
+// ---------- IPC: 桌宠启动 ----------
+const { exec } = require('child_process');
+const VPET_EXE = 'VPet-Simulator.Windows.exe';
+const launchCfgFile = () => path.join(app.getPath('userData'), 'launch-config.json');
+
+ipcMain.handle('get-launch-config', () => {
+  const f = launchCfgFile();
+  return fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : JSON.stringify({ gameDir: '' });
+});
+ipcMain.handle('set-launch-config', (_e, json) => {
+  fs.writeFileSync(launchCfgFile(), json);
+  return true;
+});
+
+function probeVpetDir(dir) {
+  if (!dir) return { dir, exe: null, modDir: null, ok: false };
+  const exe = path.join(dir, VPET_EXE);
+  const modDir = path.join(dir, 'mod');
+  return { dir, exe: fs.existsSync(exe) ? exe : null, modDir: fs.existsSync(modDir) ? modDir : null, ok: fs.existsSync(exe) && fs.existsSync(modDir) };
+}
+
+ipcMain.handle('detect-vpet-dir', () => {
+  const candidates = [
+    'C:/Program Files (x86)/Steam/steamapps/common/VPet',
+    'C:/Program Files/Steam/steamapps/common/VPet',
+    'D:/Steam/steamapps/common/VPet',
+    'D:/Program Files (x86)/Steam/steamapps/common/VPet',
+    'E:/Steam/steamapps/common/VPet',
+    path.join(process.env.LOCALAPPDATA || '', 'VPet'),
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) {
+      const r = probeVpetDir(c);
+      if (r.ok) return r;
+    }
+  }
+  return null;
+});
+ipcMain.handle('probe-vpet-dir', (_e, dir) => probeVpetDir(dir));
+
+ipcMain.handle('pick-game-dir', async () => {
+  const r = await dialog.showOpenDialog(win, { title: '选择 VPet 游戏目录(含 VPet-Simulator.Windows.exe)', properties: ['openDirectory'] });
+  return r.canceled ? null : r.filePaths[0];
+});
+
+ipcMain.handle('check-mod-installed', (_e, projectId, gameDir) => {
+  try { return fs.existsSync(path.join(gameDir, 'mod', projectId, '.vpetstudio')); } catch { return false; }
+});
+
+ipcMain.handle('install-and-launch', async (_e, projectId, gameDir, payload, launch) => {
+  const log = [];
+  try {
+    // 游戏运行中则不安装(游戏仅启动时读取 mod/, 且运行中覆盖有文件锁风险)
+    const running = await new Promise((res) => {
+      exec('tasklist /FI "IMAGENAME eq ' + VPET_EXE + '" /NH', (err, so) => res(!err && String(so).toUpperCase().includes('VPET-SIMULATOR')));
+    });
+    if (running) return { ok: false, log: ['⚠️ 检测到 VPet 游戏正在运行 —— 请先退出游戏再安装(游戏只在启动时读取模组), 或安装后在游戏内重新启用模组'] };
+    const dest = path.join(gameDir, 'mod', projectId);
+    fs.mkdirSync(dest, { recursive: true });
+    // 非 Studio 产物先备份(玩家手工目录可能含值得保留的修改)
+    const marker = path.join(dest, '.vpetstudio');
+    if (!fs.existsSync(marker) && fs.readdirSync(dest).length) {
+      const bak = dest + '.bak-' + Date.now().toString(36);
+      fs.renameSync(dest, bak);
+      log.push('↺ 目标目录非 Studio 导出, 已备份为 ' + path.basename(bak));
+      fs.mkdirSync(dest, { recursive: true });
+    }
+    const assetDir = path.join(projDir(projectId), ASSETS_DIR);
+    for (const f of payload.files) {
+      let buf;
+      if (f.kind === 'text') {
+        buf = Buffer.from(f.content || '', 'utf8');
+      } else if (f.content && String(f.content).startsWith('data:')) {
+        buf = dataUrlToBuffer(f.content);
+      } else {
+        const fp = path.join(assetDir, String(f.fileName || f.assetId));
+        if (!fs.existsSync(fp)) { log.push('✗ 缺失素材: ' + f.path); continue; }
+        buf = fs.readFileSync(fp);
+      }
+      const out = path.join(dest, f.path);
+      fs.mkdirSync(path.dirname(out), { recursive: true });
+      fs.writeFileSync(out, buf);
+    }
+    fs.writeFileSync(marker, 'made by VPet Studio');
+    log.push('✓ 已安装 ' + payload.files.length + ' 个文件 → ' + dest);
+    if (launch) {
+      const probe = probeVpetDir(gameDir);
+      if (!probe.exe) return { ok: false, log: [...log, '✗ 未找到 ' + VPET_EXE + ', 请检查游戏目录'] };
+      const child = require('child_process').spawn(probe.exe, [], { detached: true, stdio: 'ignore', cwd: gameDir });
+      child.unref();
+      log.push('🚀 已启动 VPet 游戏 —— 游戏内 设置→模组 启用「' + projectId + '」即可看到桌宠');
+    }
+    return { ok: true, log };
+  } catch (e) {
+    return { ok: false, log: ['✕ 安装失败: ' + (e && e.message || e)] };
+  }
+});
 // ---------- IPC: AI ----------
 ipcMain.handle('get-ai-config', () => {
   const f = path.join(app.getPath('userData'), 'ai-config.json');

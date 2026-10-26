@@ -28,6 +28,14 @@ export interface Backend {
   aiTest(provider: AiProvider): Promise<{ ok: boolean; message: string }>;
   aiChat(provider: AiProvider, system: string, user: string): Promise<{ ok: boolean; message: string }>;
   aiImage(provider: AiProvider, prompt: string, size: string): Promise<{ ok: boolean; message: string; images: string[] }>;
+  /** ---- 桌宠启动 ---- */
+  getLaunchConfig(): Promise<{ gameDir: string; lastProjectId?: string }>;
+  setLaunchConfig(cfg: { gameDir: string; lastProjectId?: string }): Promise<void>;
+  detectVpetDir(): Promise<{ dir: string; exe: string; modDir: string } | null>;
+  probeVpetDir(dir: string): Promise<{ dir: string; exe: string | null; modDir: string | null; ok: boolean }>;
+  pickGameDir(): Promise<string | null>;
+  checkModInstalled(projectId: string, gameDir: string): Promise<boolean>;
+  installAndLaunch(projectId: string, gameDir: string, payload: ExportPayload, launch: boolean): Promise<{ ok: boolean; log: string[] }>;
 }
 
 declare global {
@@ -63,6 +71,16 @@ function electronBackend(): Backend {
     aiTest: (provider) => ipc.aiTest(JSON.parse(JSON.stringify(provider))),
     aiChat: (provider, system, user) => ipc.aiChat(JSON.parse(JSON.stringify(provider)), system, user),
     aiImage: (provider, prompt, size) => ipc.aiImage(JSON.parse(JSON.stringify(provider)), prompt, size),
+    getLaunchConfig: async () => {
+      const s = await ipc.getLaunchConfig();
+      return s ? JSON.parse(s) : { gameDir: '' };
+    },
+    setLaunchConfig: (cfg) => ipc.setLaunchConfig(JSON.stringify(cfg)),
+    detectVpetDir: () => ipc.detectVpetDir(),
+    probeVpetDir: (dir) => ipc.probeVpetDir(dir),
+    pickGameDir: () => ipc.pickGameDir(),
+    checkModInstalled: (projectId, gameDir) => ipc.checkModInstalled(projectId, gameDir),
+    installAndLaunch: (projectId, gameDir, payload, launch) => ipc.installAndLaunch(projectId, gameDir, JSON.parse(JSON.stringify(payload)), launch),
   };
 }
 
@@ -117,6 +135,16 @@ function browserBackend(): Backend {
     aiTest: async () => ({ ok: false, message: '浏览器演示模式不支持真实 AI 调用, 请在桌面版中使用' }),
     aiChat: async () => ({ ok: false, message: '浏览器演示模式不支持真实 AI 调用, 请在桌面版中使用' }),
     aiImage: async () => ({ ok: false, message: '浏览器演示模式不支持真实 AI 调用, 请在桌面版中使用', images: [] }),
+    getLaunchConfig: async () => JSON.parse(localStorage.getItem('vpet-launch-cfg') || '{"gameDir":""}'),
+    setLaunchConfig: async (cfg) => localStorage.setItem('vpet-launch-cfg', JSON.stringify(cfg)),
+    detectVpetDir: async () => null,
+    probeVpetDir: async (dir) => ({ dir, exe: dir ? 'VPet-Simulator.Windows.exe(演示)' : null, modDir: dir ? dir + '/mod' : null, ok: !!dir }),
+    pickGameDir: async () => window.prompt('浏览器演示模式: 请输入 VPet 游戏目录路径') || null,
+    checkModInstalled: async () => false,
+    installAndLaunch: async (_id, _dir, payload, launch) => ({
+      ok: true,
+      log: [`(浏览器演示) 模拟写入 ${payload.files.length} 个文件到游戏 mod/ 目录`, launch ? '🚀 模拟启动 VPet 游戏' : '(未启动游戏)'],
+    }),
   };
 }
 
